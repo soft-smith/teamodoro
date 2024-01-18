@@ -16,9 +16,20 @@ export const TimerDetailPage = () => {
 
   const updateTimerMutation = useMutation({
     mutationFn: (state: 'start' | 'pause') =>
-      axios.post(`/api/team/${teamId}/timer/${timerId}/${state}`),
-    onSuccess: () => {
-      alert('타이머가 시작되었습니다.');
+      axios.post<{ data: Timer }>(
+        `/api/team/${teamId}/timer/${timerId}/${state}`,
+      ),
+    onSuccess: ({ data: { data } }) => {
+      switch (data.status) {
+        case 'PAUSED':
+          alert('타이머가 일시정지되었습니다.');
+          break;
+        case 'RUNNING':
+          alert('타이머가 시작되었습니다.');
+          break;
+        default:
+          break;
+      }
     },
     onError: () => {
       alert('타이머 시작에 실패했습니다.');
