@@ -11,6 +11,16 @@ interface PomodoroTimer {
   status: "RUNNING" | "PAUSED" | "STOPPED";
 }
 
+const createDtoOfTimer = (timer: PomodoroTimer) => {
+  return {
+    id: timer.id,
+    title: timer.title,
+    duration: timer.duration,
+    timeLeft: timer.timeLeft,
+    status: timer.status,
+  };
+};
+
 export const GetPomodoroTimerRequest = Type.Object({
   id: Type.String(),
   title: Type.String(),
@@ -100,7 +110,7 @@ export const createApp = () => {
       throw new Error("Team not found");
     }
     return {
-      data: team.timerList,
+      data: team.timerList.map(createDtoOfTimer),
     };
   });
 
@@ -123,7 +133,7 @@ export const createApp = () => {
     };
     team.timerList.push(timer);
     return {
-      data: timer,
+      data: createDtoOfTimer(timer),
     };
   });
 
@@ -144,7 +154,7 @@ export const createApp = () => {
       throw new Error("Timer not found");
     }
     return {
-      data: timer,
+      data: createDtoOfTimer(timer),
     };
   });
 
@@ -167,7 +177,7 @@ export const createApp = () => {
     }
     timer.status = "PAUSED";
     return {
-      data: timer,
+      data: createDtoOfTimer(timer),
     };
   });
 
@@ -205,7 +215,7 @@ export const createApp = () => {
 
     timer.status = "RUNNING";
     return {
-      data: timer,
+      data: createDtoOfTimer(timer),
     };
   });
 
