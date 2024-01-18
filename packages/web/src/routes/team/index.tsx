@@ -1,3 +1,4 @@
+import { type Timer } from '@/api/types';
 import { css } from '@emotion/react';
 import { useQuery } from '@tanstack/react-query';
 import axios from 'axios';
@@ -13,13 +14,7 @@ export const TeamPage = () => {
         data: {
           readonly name: string;
           readonly id: string;
-          readonly timerList: readonly {
-            readonly id: string;
-            readonly title: string;
-            readonly duration: number;
-            readonly timeLeft: number;
-            readonly status: 'RUNNING' | 'PAUSED' | 'STOPPED';
-          }[];
+          readonly timerList: readonly Timer[];
         };
       }>(path),
     select: ({ data: { data } }) => data,
@@ -118,7 +113,7 @@ export const TeamPage = () => {
                   border: 1px solid black;
                 `}
               >
-                <Link to={`/timer/${timer.id}`}>{timer.title}</Link>
+                <Link to={`timer/${timer.id}`}>{timer.title}</Link>
               </li>
             ))}
           </ul>
