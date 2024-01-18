@@ -187,6 +187,10 @@ def test_create_team_and_timer_and_start_timer_and_pause_timer_and_resume_timer(
     response = requests.post(url + "/team/" + team_id + "/timer/" + timer_id + "/start")
     assert response.status_code == 200
 
+    # get team
+    response = requests.get(url + "/team/" + team_id)
+    assert response.status_code == 200
+
     response = requests.post(url + "/team/" + team_id + "/timer/" + timer_id + "/pause")
     assert response.status_code == 200
 
