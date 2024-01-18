@@ -1,6 +1,27 @@
 import { css } from '@emotion/react';
+import { useMutation } from '@tanstack/react-query';
+import axios from 'axios';
+import { useNavigate } from 'react-router-dom';
 
 export const MainPage = () => {
+  const navigate = useNavigate();
+
+  const createTeamMutation = useMutation({
+    mutationFn: (name: string) =>
+      axios.post<{
+        data: {
+          readonly id: string;
+          readonly name: string;
+        };
+      }>('/api/team/create', { name }),
+    onSuccess: ({ data: { data } }) => {
+      navigate(`/team/${data.id}`);
+    },
+    onError: (error) => {
+      console.error(error);
+    },
+  });
+
   return (
     <div
       css={css`
@@ -25,7 +46,11 @@ export const MainPage = () => {
 
       <form
         onSubmit={(e) => {
+          console.log(e);
           e.preventDefault();
+          const formData = new FormData(e.currentTarget);
+          const name = formData.get('team-name') as string;
+          createTeamMutation.mutate(name);
         }}
         css={css`
           display: flex;
@@ -38,14 +63,17 @@ export const MainPage = () => {
         <label>
           <h2>Enter your team name</h2>
           <input
-            type="text"
+            required
+            name="team-name"
             css={css`
               width: 100%;
             `}
           />
         </label>
 
-        <button type="submit">Submit</button>
+        <button disabled={createTeamMutation.isPending} type="submit">
+          Submit
+        </button>
       </form>
     </div>
   );
