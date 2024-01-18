@@ -189,6 +189,10 @@ export const createApp = () => {
     if (!timer) {
       throw new Error("Timer not found");
     }
+    if (timer.timerId) {
+      clearInterval(timer.timerId);
+      timer.timerId = null;
+    }
     timer.status = "PAUSED";
     return {
       data: createDtoOfTimer(timer),
