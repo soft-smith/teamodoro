@@ -3,7 +3,7 @@
   "version": "1.0.0",
   "main": "src/index.ts",
   "license": "MIT",
-  "type":"module",
+  "type": "module",
   "scripts": {
     "dev": "ts-node-esm src/index.ts"
   },
@@ -13,6 +13,8 @@
     "typescript": "^5.3.3"
   },
   "dependencies": {
+    "@fastify/type-provider-typebox": "^4.0.0",
+    "@sinclair/typebox": "^0.32.9",
     "fastify": "^4.25.2"
   }
 }
