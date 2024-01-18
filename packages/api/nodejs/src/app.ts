@@ -47,11 +47,25 @@ export type CreateTimerRequestType = Static<typeof CreateTimerRequest>;
 
 export const createApp = () => {
   const teamList: Team[] = [];
+  let idCounter = 0;
+  const getId = () => {
+    idCounter += 1;
+    return idCounter.toString();
+  };
 
   const app = fastify({ logger: true }).withTypeProvider<TypeBoxTypeProvider>();
 
   app.get("/", async () => {
     return { hello: "world" };
+  });
+
+  // reset server state
+  app.post("/reset", async (request) => {
+    teamList.splice(0, teamList.length);
+    idCounter = 0;
+    return {
+      data: "OK",
+    };
   });
 
   app.post<{
@@ -66,7 +80,7 @@ export const createApp = () => {
     async (request) => {
       const team: Team = {
         ...request.body,
-        id: "1",
+        id: getId(),
         timerList: [],
       };
       teamList.push(team);
@@ -78,7 +92,7 @@ export const createApp = () => {
 
   app.get<{
     Params: {
-      "teamId": string;
+      teamId: string;
     };
   }>("/team/:teamId/timer/list", async (request) => {
     const team = teamList.find((team) => team.id === request.params["teamId"]);
@@ -92,7 +106,7 @@ export const createApp = () => {
 
   app.post<{
     Params: {
-      "teamId": string;
+      teamId: string;
     };
     Body: CreateTimerRequestType;
   }>("/team/:teamId/timer/create", async (request) => {
@@ -102,7 +116,7 @@ export const createApp = () => {
     }
     const timer: PomodoroTimer = {
       ...request.body,
-      id: "1",
+      id: getId(),
       status: "PAUSED",
       timeLeft: request.body.duration,
       timerId: null,
@@ -115,8 +129,8 @@ export const createApp = () => {
 
   app.get<{
     Params: {
-      "teamId": string;
-      "timerId": string;
+      teamId: string;
+      timerId: string;
     };
   }>("/team/:teamId/timer/:timerId", async (request) => {
     const team = teamList.find((team) => team.id === request.params["teamId"]);
@@ -137,8 +151,8 @@ export const createApp = () => {
   // pause timer
   app.post<{
     Params: {
-      "teamId": string;
-      "timerId": string;
+      teamId: string;
+      timerId: string;
     };
   }>("/team/:teamId/timer/:timerId/pause", async (request) => {
     const team = teamList.find((team) => team.id === request.params["teamId"]);
@@ -160,8 +174,8 @@ export const createApp = () => {
   // resume or start timer
   app.post<{
     Params: {
-      "teamId": string;
-      "timerId": string;
+      teamId: string;
+      timerId: string;
     };
   }>("/team/:teamId/timer/:timerId/start", async (request) => {
     const team = teamList.find((team) => team.id === request.params["teamId"]);
@@ -198,8 +212,8 @@ export const createApp = () => {
   // delete timer
   app.delete<{
     Params: {
-      "teamId": string;
-      "timerId": string;
+      teamId: string;
+      timerId: string;
     };
   }>("/team/:teamId/timer/:timerId", async (request) => {
     const team = teamList.find((team) => team.id === request.params["teamId"]);
