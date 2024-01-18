@@ -104,6 +104,20 @@ export const createApp = () => {
     Params: {
       teamId: string;
     };
+  }>("/team/:teamId", async (request) => {
+    const team = teamList.find((team) => team.id === request.params["teamId"]);
+    if (!team) {
+      throw new Error("Team not found");
+    }
+    return {
+      data: team,
+    };
+  });
+
+  app.get<{
+    Params: {
+      teamId: string;
+    };
   }>("/team/:teamId/timer/list", async (request) => {
     const team = teamList.find((team) => team.id === request.params["teamId"]);
     if (!team) {

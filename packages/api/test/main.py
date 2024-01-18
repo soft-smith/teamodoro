@@ -14,6 +14,11 @@ def test_create_team_and_timer():
 
     team_id = response.json()["data"]["id"]
 
+    # get team by id
+    response = requests.get(url + "/team/" + team_id)
+    assert response.status_code == 200
+    assert response.json()["data"]["name"] == "test team"
+
     timer = {
         "title": "test timer",
         "duration": 60,
