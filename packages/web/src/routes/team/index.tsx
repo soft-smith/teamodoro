@@ -1,7 +1,38 @@
 import { css } from '@emotion/react';
-import { Link } from 'react-router-dom';
+import { useQuery } from '@tanstack/react-query';
+import axios from 'axios';
+import { Link, useParams } from 'react-router-dom';
 
 export const TeamPage = () => {
+  const { teamId } = useParams();
+
+  const teamQuery = useQuery({
+    queryKey: [`/api/team/${teamId}`] as const,
+    queryFn: ({ queryKey: [path] }) =>
+      axios.get<{
+        data: {
+          readonly name: string;
+          readonly id: string;
+          readonly timerList: readonly {
+            readonly id: string;
+            readonly title: string;
+            readonly duration: number;
+            readonly timeLeft: number;
+            readonly status: 'RUNNING' | 'PAUSED' | 'STOPPED';
+          }[];
+        };
+      }>(path),
+    select: ({ data: { data } }) => data,
+  });
+
+  if (teamQuery.status === 'error') {
+    return <div>에러</div>;
+  }
+
+  if (teamQuery.status === 'pending') {
+    return <div>로딩중</div>;
+  }
+
   return (
     <div
       css={css`
@@ -30,7 +61,7 @@ export const TeamPage = () => {
           <button>링크 복사</button>
         </div>
 
-        <p>123</p>
+        <p>{teamQuery.data.name}</p>
       </div>
 
       <div
@@ -51,109 +82,34 @@ export const TeamPage = () => {
           <Link to="create-timer">추가하기</Link>
         </div>
 
-        <ul
-          css={css`
-            list-style: none;
-            display: flex;
-            flex-wrap: wrap;
-            gap: 4rem;
+        {teamQuery.data.timerList.length === 0 ? (
+          <p>타이머 없음</p>
+        ) : (
+          <ul
+            css={css`
+              list-style: none;
+              display: flex;
+              flex-wrap: wrap;
+              gap: 4rem;
 
-            & > li {
-            }
-          `}
-        >
-          <li>
-            <Link to="timer/123">타이머 이름</Link>
-          </li>
-
-          <li>
-            <Link to="timer/456">타이머 이름</Link>
-          </li>
-          <li>
-            <Link to="timer/456">타이머 이름</Link>
-          </li>
-          <li>
-            <Link to="timer/456">타이머 이름</Link>
-          </li>
-          <li>
-            <Link to="timer/456">타이머 이름</Link>
-          </li>
-          <li>
-            <Link to="timer/456">타이머 이름</Link>
-          </li>
-          <li>
-            <Link to="timer/456">타이머 이름</Link>
-          </li>
-          <li>
-            <Link to="timer/456">타이머 이름</Link>
-          </li>
-          <li>
-            <Link to="timer/456">타이머 이름</Link>
-          </li>
-          <li>
-            <Link to="timer/456">타이머 이름</Link>
-          </li>
-          <li>
-            <Link to="timer/456">타이머 이름</Link>
-          </li>
-          <li>
-            <Link to="timer/456">타이머 이름</Link>
-          </li>
-          <li>
-            <Link to="timer/456">타이머 이름</Link>
-          </li>
-          <li>
-            <Link to="timer/456">타이머 이름</Link>
-          </li>
-          <li>
-            <Link to="timer/456">타이머 이름</Link>
-          </li>
-          <li>
-            <Link to="timer/456">타이머 이름</Link>
-          </li>
-          <li>
-            <Link to="timer/456">타이머 이름</Link>
-          </li>
-          <li>
-            <Link to="timer/456">타이머 이름</Link>
-          </li>
-          <li>
-            <Link to="timer/456">타이머 이름</Link>
-          </li>
-          <li>
-            <Link to="timer/456">타이머 이름</Link>
-          </li>
-          <li>
-            <Link to="timer/456">타이머 이름</Link>
-          </li>
-          <li>
-            <Link to="timer/456">타이머 이름</Link>
-          </li>
-          <li>
-            <Link to="timer/456">타이머 이름</Link>
-          </li>
-          <li>
-            <Link to="timer/456">타이머 이름</Link>
-          </li>
-          <li>
-            <Link to="timer/456">타이머 이름</Link>
-          </li>
-          <li>
-            <Link to="timer/456">타이머 이름</Link>
-          </li>
-          <li>
-            <Link to="timer/456">타이머 이름</Link>
-          </li>
-          <li>
-            <Link to="timer/456">타이머 이름</Link>
-          </li>
-          <li>
-            <Link to="timer/456">타이머 이름</Link>
-          </li>
-          <li>
-            <Link to="timer/456">타이머 이름</Link>
-          </li>
-        </ul>
+              & > li {
+              }
+            `}
+          >
+            {teamQuery.data.timerList.map((timer) => (
+              <li
+                key={timer.id}
+                css={css`
+                  width: 20rem;
+                  height: 20rem;
+                  border: 1px solid black;
+                `}
+              >
+                <Link to={`/timer/${timer.id}`}>{timer.title}</Link>
+              </li>
+            ))}
+          </ul>
+        )}
       </div>
     </div>
   );
