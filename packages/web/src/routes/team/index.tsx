@@ -58,7 +58,20 @@ export const TeamPage = () => {
           `}
         >
           <h1>팀 이름</h1>
-          <button>링크 복사</button>
+          <button
+            onClick={() => {
+              navigator.clipboard
+                .writeText(window.location.href)
+                .then(() => {
+                  alert('링크를 복사했습니다.');
+                })
+                .catch(() => {
+                  alert('링크를 복사하는데 실패했습니다.');
+                });
+            }}
+          >
+            링크 복사
+          </button>
         </div>
 
         <p>{teamQuery.data.name}</p>
