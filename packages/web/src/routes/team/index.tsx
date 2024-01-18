@@ -1,4 +1,4 @@
-import { type Timer } from '@/api/types';
+import { Timer } from '@/api/types';
 import { css } from '@emotion/react';
 import { useQuery } from '@tanstack/react-query';
 import axios from 'axios';
@@ -14,17 +14,25 @@ export const TeamPage = () => {
         data: {
           readonly name: string;
           readonly id: string;
-          readonly timerList: readonly Timer[];
+          // readonly timerList: readonly Timer[];
         };
       }>(path),
     select: ({ data: { data } }) => data,
   });
 
-  if (teamQuery.status === 'error') {
+  const timerListQuery = useQuery({
+    queryKey: [`/api/team/${teamId}/timer/list`] as const,
+    queryFn: ({ queryKey: [path] }) =>
+      axios.get<{ data: readonly Timer[] }>(path),
+    select: ({ data: { data } }) => data,
+    refetchInterval: 100,
+  });
+
+  if (teamQuery.status === 'error' || timerListQuery.status === 'error') {
     return <div>에러</div>;
   }
 
-  if (teamQuery.status === 'pending') {
+  if (teamQuery.status === 'pending' || timerListQuery.status === 'pending') {
     return <div>로딩중</div>;
   }
 
@@ -90,7 +98,7 @@ export const TeamPage = () => {
           <Link to="create-timer">추가하기</Link>
         </div>
 
-        {teamQuery.data.timerList.length === 0 ? (
+        {timerListQuery.data.length === 0 ? (
           <p>타이머 없음</p>
         ) : (
           <ul
@@ -104,7 +112,7 @@ export const TeamPage = () => {
               }
             `}
           >
-            {teamQuery.data.timerList.map((timer) => (
+            {timerListQuery.data.map((timer) => (
               <li
                 key={timer.id}
                 css={css`
