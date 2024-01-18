@@ -95,7 +95,7 @@ export const createApp = () => {
       };
       teamList.push(team);
       return {
-        data: team,
+        data: { ...team, timerList: undefined },
       };
     }
   );
@@ -110,7 +110,7 @@ export const createApp = () => {
       throw new Error("Team not found");
     }
     return {
-      data: team,
+      data: { ...team, timerList: undefined },
     };
   });
 
@@ -234,12 +234,12 @@ export const createApp = () => {
   });
 
   // delete timer
-  app.delete<{
+  app.post<{
     Params: {
       teamId: string;
       timerId: string;
     };
-  }>("/team/:teamId/timer/:timerId", async (request) => {
+  }>("/team/:teamId/timer/:timerId/delete", async (request) => {
     const team = teamList.find((team) => team.id === request.params["teamId"]);
     if (!team) {
       throw new Error("Team not found");
