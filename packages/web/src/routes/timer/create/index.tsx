@@ -1,8 +1,35 @@
 import { css } from '@emotion/react';
+import { useMutation } from '@tanstack/react-query';
+import axios from 'axios';
+import { useNavigate, useParams } from 'react-router-dom';
 
 export const CreateTimerPage = () => {
+  const { teamId } = useParams();
+
+  const navigate = useNavigate();
+
+  const createTimerMutation = useMutation({
+    mutationFn: (params: {
+      readonly title: string;
+      readonly duration: string;
+    }) => axios.post(`/api/team/${teamId}/timer/create`, params),
+    onSuccess: () => {
+      navigate(`/team/${teamId}`);
+    },
+    onError: () => {
+      alert('타이머 생성에 실패했습니다.');
+    },
+  });
+
   return (
     <form
+      onSubmit={(e) => {
+        e.preventDefault();
+        const formData = new FormData(e.currentTarget);
+        const title = formData.get('title') as string;
+        const duration = formData.get('duration') as string;
+        createTimerMutation.mutate({ title, duration });
+      }}
       css={css`
         width: 100vw;
         height: 100svh;
@@ -23,12 +50,14 @@ export const CreateTimerPage = () => {
     >
       <label>
         <h2>타이머 이름</h2>
-        <input />
+        <input name="title" />
       </label>
 
       <label>
         <h2>시간</h2>
-        <input />
+        <span>
+          <input name="duration" /> 초
+        </span>
       </label>
 
       <button type="submit">생성</button>
