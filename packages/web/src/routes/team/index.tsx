@@ -113,15 +113,41 @@ export const TeamPage = () => {
             `}
           >
             {timerListQuery.data.map((timer) => (
-              <li
-                key={timer.id}
-                css={css`
-                  width: 20rem;
-                  height: 20rem;
-                  border: 1px solid black;
-                `}
-              >
-                <Link to={`timer/${timer.id}`}>{timer.title}</Link>
+              <li key={timer.id}>
+                <Link
+                  to={`timer/${timer.id}`}
+                  css={css`
+                    width: 20rem;
+
+                    border: 1px solid black;
+                    text-decoration: none;
+                    color: black;
+
+                    display: flex;
+                    align-items: center;
+                    justify-content: space-between;
+                    padding: 1rem;
+                  `}
+                >
+                  <span
+                    css={css`
+                      flex: 1;
+                      text-align: center;
+                    `}
+                  >
+                    {timer.title}
+                  </span>
+
+                  <h1
+                    css={css`
+                      margin: 0;
+                      width: 10rem;
+                      text-align: center;
+                    `}
+                  >
+                    {timer.timeLeft}
+                  </h1>
+                </Link>
               </li>
             ))}
           </ul>
