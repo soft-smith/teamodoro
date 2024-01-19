@@ -43,12 +43,21 @@ export const CreateTimerPage = () => {
           e.preventDefault();
           const formData = new FormData(e.currentTarget);
           const title = formData.get('title') as string;
-          const duration = formData.get('duration') as string;
-          createTimerMutation.mutate({ title, duration });
+          const hours = formData.get('duration-hours') as string;
+          const minutes = formData.get('duration-minutes') as string;
+          const seconds = formData.get('duration-seconds') as string;
+          const durationInSeconds = (
+            Number(hours) * 3600 +
+            Number(minutes) * 60 +
+            Number(seconds)
+          ).toString();
+          createTimerMutation.mutate({ title, duration: durationInSeconds });
         }}
         css={css`
           display: flex;
           flex-direction: column;
+          align-items: center;
+          justify-content: center;
           gap: 1rem;
 
           & > label {
@@ -61,13 +70,44 @@ export const CreateTimerPage = () => {
       >
         <label>
           <h2>이름</h2>
-          <input name="title" />
+          <input required name="title" />
         </label>
 
         <label>
           <h2>시간</h2>
-          <span>
-            <input name="duration" /> 초
+          <span
+            css={css`
+              display: flex;
+              gap: 0.5rem;
+            `}
+          >
+            <input
+              required
+              name="duration-hours"
+              type="number"
+              min={0}
+              max={23}
+              defaultValue={0}
+            />
+            시간
+            <input
+              required
+              name="duration-minutes"
+              type="number"
+              min={0}
+              max={59}
+              defaultValue={30}
+            />
+            분
+            <input
+              required
+              name="duration-seconds"
+              type="number"
+              min={0}
+              max={59}
+              defaultValue={0}
+            />
+            초
           </span>
         </label>
 
