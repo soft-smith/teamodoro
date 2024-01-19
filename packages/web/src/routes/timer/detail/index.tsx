@@ -44,6 +44,7 @@ export const TimerDetailPage = () => {
   });
 
   const timerQuery = useQuery({
+    enabled: deleteTimerMutation.isIdle,
     queryKey: [`/api/team/${teamId}/timer/${timerId}`] as const,
     queryFn: ({ queryKey: [path] }) => axios.get<{ data: Timer }>(path),
     select: ({ data: { data } }) => data,
