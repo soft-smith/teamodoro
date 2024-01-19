@@ -108,45 +108,49 @@ export const TeamPage = () => {
           <ul
             css={css`
               list-style: none;
-              display: flex;
-              flex-wrap: wrap;
+              display: grid;
+              grid-template-columns: repeat(auto-fill, minmax(10rem, 1fr));
               gap: 4rem;
             `}
           >
             {timerListQuery.data.map((timer) => (
-              <li key={timer.id}>
+              <li
+                key={timer.id}
+                css={css`
+                  border: 1px solid black;
+                `}
+              >
                 <Link
                   to={`timer/${timer.id}`}
                   css={css`
-                    width: 20rem;
-
-                    border: 1px solid black;
                     text-decoration: none;
                     color: black;
 
                     display: flex;
-                    align-items: center;
-                    justify-content: space-between;
+                    flex-direction: column;
                     padding: 1rem;
                   `}
                 >
-                  <span
+                  <h2
                     css={css`
-                      flex: 1;
-                      text-align: center;
+                      display: -webkit-box;
+                      -webkit-box-orient: vertical;
+                      -webkit-line-clamp: 1;
+
+                      word-break: break-all;
+                      overflow: hidden;
+                      text-overflow: ellipsis;
                     `}
                   >
                     {timer.title}
-                  </span>
-
-                  <h1
+                  </h2>
+                  <p
                     css={css`
-                      width: 10rem;
-                      text-align: center;
+                      align-self: flex-end;
                     `}
                   >
                     {timer.timeLeft}
-                  </h1>
+                  </p>
                 </Link>
               </li>
             ))}
