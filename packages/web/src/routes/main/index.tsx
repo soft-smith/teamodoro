@@ -18,7 +18,8 @@ export const MainPage = () => {
       navigate(`/team/${data.id}`);
     },
     onError: (error) => {
-      console.error(error);
+      // TODO: 에러 처리
+      console.log(error);
     },
   });
 
@@ -40,7 +41,6 @@ export const MainPage = () => {
 
       <form
         onSubmit={(e) => {
-          console.log(e);
           e.preventDefault();
           const formData = new FormData(e.currentTarget);
           const name = formData.get('team-name') as string;

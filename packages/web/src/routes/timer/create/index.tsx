@@ -4,9 +4,9 @@ import axios from 'axios';
 import { useNavigate, useParams } from 'react-router-dom';
 
 export const CreateTimerPage = () => {
-  const { teamId } = useParams();
-
   const navigate = useNavigate();
+
+  const { teamId } = useParams();
 
   const createTimerMutation = useMutation({
     mutationFn: (params: {
