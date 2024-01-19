@@ -1,6 +1,7 @@
 import { TypeBoxTypeProvider } from "@fastify/type-provider-typebox";
 import { Static, Type } from "@sinclair/typebox";
 import fastify from "fastify";
+import fastifyWebsocket from "@fastify/websocket";
 import { PomodoroTimer, Team } from "./types.ts";
 
 const createDtoOfTimer = (timer: PomodoroTimer) => {
@@ -42,7 +43,25 @@ export const createApp = () => {
     return idCounter.toString();
   };
 
-  const app = fastify({ logger: true }).withTypeProvider<TypeBoxTypeProvider>();
+  const app = fastify({ logger: true })
+    .withTypeProvider<TypeBoxTypeProvider>()
+    .register(fastifyWebsocket)
+    .register(async (app) => {
+      app.get("/", { websocket: true }, (conn, req) => {
+        console.log(req.body);
+
+        conn.socket.on("message", (msg) => {
+          console.log(req.id, msg.toString());
+          conn.socket.send("Hello from server");
+        });
+        conn.socket.on("close", (code) => {
+          console.log(req.id, `Connection closed with code ${code}`);
+        });
+        conn.socket.on("error", (err) => {
+          console.log(req.id, err);
+        });
+      });
+    });
 
   // reset server state
   app.post("/reset", async (request) => {
