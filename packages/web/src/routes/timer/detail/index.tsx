@@ -1,4 +1,5 @@
 import { Timer } from '@/api/types';
+import utils from '@/utils';
 import { css } from '@emotion/react';
 import { useMutation, useQuery, useQueryClient } from '@tanstack/react-query';
 import axios from 'axios';
@@ -78,7 +79,7 @@ export const TimerDetailPage = () => {
     >
       <h1>{timerQuery.data.title}</h1>
 
-      <h2>{timerQuery.data.timeLeft}</h2>
+      <h2>{utils.time.format(timerQuery.data.timeLeft)}</h2>
 
       {timerQuery.data.status === 'PAUSED' && (
         <button

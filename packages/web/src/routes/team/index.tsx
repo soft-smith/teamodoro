@@ -1,4 +1,5 @@
 import { Timer } from '@/api/types';
+import utils from '@/utils';
 import { css } from '@emotion/react';
 import { useQuery } from '@tanstack/react-query';
 import axios from 'axios';
@@ -139,12 +140,13 @@ export const TeamPage = () => {
                   >
                     {timer.title}
                   </h3>
+
                   <p
                     css={css`
                       align-self: flex-end;
                     `}
                   >
-                    {timer.timeLeft}
+                    {utils.time.format(timer.timeLeft)}
                   </p>
                 </Link>
               </li>
