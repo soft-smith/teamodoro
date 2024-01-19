@@ -38,41 +38,36 @@ export const TeamPage = () => {
 
         display: flex;
         flex-direction: column;
+        gap: 2rem;
       `}
     >
-      <div
+      <header
         css={css`
+          width: 100%;
           display: flex;
           flex-direction: column;
         `}
       >
-        <div
+        <h1>{teamQuery.data.name}</h1>
+
+        <button
+          onClick={() => {
+            navigator.clipboard
+              .writeText(window.location.href)
+              .then(() => {
+                alert('링크를 복사했습니다.');
+              })
+              .catch(() => {
+                alert('링크를 복사하는데 실패했습니다.');
+              });
+          }}
           css={css`
-            width: 100%;
-            display: flex;
-            align-items: center;
-            justify-content: space-between;
+            width: max-content;
           `}
         >
-          <h1>팀 이름</h1>
-          <button
-            onClick={() => {
-              navigator.clipboard
-                .writeText(window.location.href)
-                .then(() => {
-                  alert('링크를 복사했습니다.');
-                })
-                .catch(() => {
-                  alert('링크를 복사하는데 실패했습니다.');
-                });
-            }}
-          >
-            링크 복사
-          </button>
-        </div>
-
-        <p>{teamQuery.data.name}</p>
-      </div>
+          링크 복사하기
+        </button>
+      </header>
 
       <div
         css={css`
@@ -89,7 +84,7 @@ export const TeamPage = () => {
             justify-content: space-between;
           `}
         >
-          <h1>타이머 목록</h1>
+          <h2>타이머 목록</h2>
           <Link to="create-timer">추가하기</Link>
         </div>
 
@@ -131,7 +126,7 @@ export const TeamPage = () => {
                     padding: 1rem;
                   `}
                 >
-                  <h2
+                  <h3
                     css={css`
                       display: -webkit-box;
                       -webkit-box-orient: vertical;
@@ -143,7 +138,7 @@ export const TeamPage = () => {
                     `}
                   >
                     {timer.title}
-                  </h2>
+                  </h3>
                   <p
                     css={css`
                       align-self: flex-end;
