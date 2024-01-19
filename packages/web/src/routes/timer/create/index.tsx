@@ -22,14 +22,7 @@ export const CreateTimerPage = () => {
   });
 
   return (
-    <form
-      onSubmit={(e) => {
-        e.preventDefault();
-        const formData = new FormData(e.currentTarget);
-        const title = formData.get('title') as string;
-        const duration = formData.get('duration') as string;
-        createTimerMutation.mutate({ title, duration });
-      }}
+    <div
       css={css`
         width: 100vw;
         height: 100svh;
@@ -38,29 +31,48 @@ export const CreateTimerPage = () => {
         flex-direction: column;
         align-items: center;
         justify-content: center;
-        gap: 1rem;
-
-        & > label {
-          display: flex;
-          flex-direction: column;
-          align-items: center;
-          justify-content: center;
-        }
+        gap: 2rem;
       `}
     >
-      <label>
-        <h2>타이머 이름</h2>
-        <input name="title" />
-      </label>
+      <header>
+        <h1>새 타이머 생성</h1>
+      </header>
 
-      <label>
-        <h2>시간</h2>
-        <span>
-          <input name="duration" /> 초
-        </span>
-      </label>
+      <form
+        onSubmit={(e) => {
+          e.preventDefault();
+          const formData = new FormData(e.currentTarget);
+          const title = formData.get('title') as string;
+          const duration = formData.get('duration') as string;
+          createTimerMutation.mutate({ title, duration });
+        }}
+        css={css`
+          display: flex;
+          flex-direction: column;
+          gap: 1rem;
 
-      <button type="submit">생성</button>
-    </form>
+          & > label {
+            display: flex;
+            flex-direction: column;
+            align-items: center;
+            justify-content: center;
+          }
+        `}
+      >
+        <label>
+          <h2>이름</h2>
+          <input name="title" />
+        </label>
+
+        <label>
+          <h2>시간</h2>
+          <span>
+            <input name="duration" /> 초
+          </span>
+        </label>
+
+        <button type="submit">생성</button>
+      </form>
+    </div>
   );
 };
