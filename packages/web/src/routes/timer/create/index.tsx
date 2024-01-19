@@ -4,9 +4,9 @@ import axios from 'axios';
 import { useNavigate, useParams } from 'react-router-dom';
 
 export const CreateTimerPage = () => {
-  const { teamId } = useParams();
-
   const navigate = useNavigate();
+
+  const { teamId } = useParams();
 
   const createTimerMutation = useMutation({
     mutationFn: (params: {
@@ -22,14 +22,7 @@ export const CreateTimerPage = () => {
   });
 
   return (
-    <form
-      onSubmit={(e) => {
-        e.preventDefault();
-        const formData = new FormData(e.currentTarget);
-        const title = formData.get('title') as string;
-        const duration = formData.get('duration') as string;
-        createTimerMutation.mutate({ title, duration });
-      }}
+    <div
       css={css`
         width: 100vw;
         height: 100svh;
@@ -38,29 +31,88 @@ export const CreateTimerPage = () => {
         flex-direction: column;
         align-items: center;
         justify-content: center;
-        gap: 1rem;
+        gap: 2rem;
+      `}
+    >
+      <header>
+        <h1>새 타이머 생성</h1>
+      </header>
 
-        & > label {
+      <form
+        onSubmit={(e) => {
+          e.preventDefault();
+          const formData = new FormData(e.currentTarget);
+          const title = formData.get('title') as string;
+          const hours = formData.get('duration-hours') as string;
+          const minutes = formData.get('duration-minutes') as string;
+          const seconds = formData.get('duration-seconds') as string;
+          const durationInSeconds = (
+            Number(hours) * 3600 +
+            Number(minutes) * 60 +
+            Number(seconds)
+          ).toString();
+          createTimerMutation.mutate({ title, duration: durationInSeconds });
+        }}
+        css={css`
           display: flex;
           flex-direction: column;
           align-items: center;
           justify-content: center;
-        }
-      `}
-    >
-      <label>
-        <h2>타이머 이름</h2>
-        <input name="title" />
-      </label>
+          gap: 1rem;
 
-      <label>
-        <h2>시간</h2>
-        <span>
-          <input name="duration" /> 초
-        </span>
-      </label>
+          & > label {
+            display: flex;
+            flex-direction: column;
+            align-items: center;
+            justify-content: center;
+          }
+        `}
+      >
+        <label>
+          <h2>이름</h2>
+          <input required name="title" />
+        </label>
 
-      <button type="submit">생성</button>
-    </form>
+        <label>
+          <h2>시간</h2>
+          <span
+            css={css`
+              display: flex;
+              gap: 0.5rem;
+            `}
+          >
+            <input
+              required
+              name="duration-hours"
+              type="number"
+              min={0}
+              max={23}
+              defaultValue={0}
+            />
+            시간
+            <input
+              required
+              name="duration-minutes"
+              type="number"
+              min={0}
+              max={59}
+              defaultValue={30}
+            />
+            분
+            <input
+              required
+              name="duration-seconds"
+              type="number"
+              min={0}
+              max={59}
+              defaultValue={0}
+            />
+            초
+          </span>
+        </label>
+
+        <button type="submit">생성</button>
+      </form>
+    </div>
   );
 };

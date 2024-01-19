@@ -1,8 +1,3 @@
-:where(*) {
-  margin: 0;
-  padding: 0;
-}
-
 /* Document
  * ========================================================================== */
 
@@ -358,4 +353,9 @@
 :where([aria-hidden='false' i][hidden]:not(:focus)) {
   clip: rect(0, 0, 0, 0);
   position: absolute;
+}
+
+:where(*) {
+  margin: 0;
+  padding: 0;
 }

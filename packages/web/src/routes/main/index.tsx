@@ -18,7 +18,8 @@ export const MainPage = () => {
       navigate(`/team/${data.id}`);
     },
     onError: (error) => {
-      console.error(error);
+      // TODO: 에러 처리
+      console.log(error);
     },
   });
 
@@ -36,17 +37,10 @@ export const MainPage = () => {
         gap: 1rem;
       `}
     >
-      <h1
-        css={css`
-          margin: 0;
-        `}
-      >
-        teamodoro.app
-      </h1>
+      <h1>teamodoro.app</h1>
 
       <form
         onSubmit={(e) => {
-          console.log(e);
           e.preventDefault();
           const formData = new FormData(e.currentTarget);
           const name = formData.get('team-name') as string;

@@ -1,20 +1,16 @@
 import { Timer } from '@/api/types';
+import utils from '@/utils';
 import { css } from '@emotion/react';
-import { useMutation, useQuery, useQueryClient } from '@tanstack/react-query';
+import { useMutation, useQuery } from '@tanstack/react-query';
 import axios from 'axios';
 import { useNavigate, useParams } from 'react-router-dom';
 
 export const TimerDetailPage = () => {
+  const navigate = useNavigate();
+
   const { teamId, timerId } = useParams();
 
-  const timerQuery = useQuery({
-    queryKey: [`/api/team/${teamId}/timer/${timerId}`] as const,
-    queryFn: ({ queryKey: [path] }) => axios.get<{ data: Timer }>(path),
-    select: ({ data: { data } }) => data,
-    refetchInterval: 100,
-  });
-
-  const updateTimerMutation = useMutation({
+  const updateTimerStateMutation = useMutation({
     mutationFn: (state: 'start' | 'pause') =>
       axios.post<{ data: Timer }>(
         `/api/team/${teamId}/timer/${timerId}/${state}`,
@@ -36,22 +32,23 @@ export const TimerDetailPage = () => {
     },
   });
 
-  const navigate = useNavigate();
-
-  const queryClient = useQueryClient();
-
   const deleteTimerMutation = useMutation({
     mutationFn: () => axios.post(`/api/team/${teamId}/timer/${timerId}/delete`),
     onSuccess: () => {
       navigate(`/team/${teamId}`, { replace: true });
       alert('타이머가 삭제되었습니다.');
-      queryClient
-        .invalidateQueries({ queryKey: [`/api/team/${teamId}`] })
-        .catch((e) => console.log(e));
     },
     onError: () => {
       alert('타이머 삭제에 실패했습니다.');
     },
+  });
+
+  const timerQuery = useQuery({
+    enabled: deleteTimerMutation.isIdle,
+    queryKey: [`/api/team/${teamId}/timer/${timerId}`] as const,
+    queryFn: ({ queryKey: [path] }) => axios.get<{ data: Timer }>(path),
+    select: ({ data: { data } }) => data,
+    refetchInterval: 100,
   });
 
   if (timerQuery.status === 'error') {
@@ -76,23 +73,17 @@ export const TimerDetailPage = () => {
         gap: 1rem;
       `}
     >
-      <h1
-        css={css`
-          margin: 0;
-        `}
-      >
-        {timerQuery.data.title}
-      </h1>
+      <h1>{timerQuery.data.title}</h1>
 
-      <h2>{timerQuery.data.timeLeft}</h2>
+      <h2>{utils.time.format(timerQuery.data.timeLeft)}</h2>
 
       {timerQuery.data.status === 'PAUSED' && (
         <button
           type="button"
           disabled={
-            updateTimerMutation.isPending || deleteTimerMutation.isPending
+            updateTimerStateMutation.isPending || deleteTimerMutation.isPending
           }
-          onClick={() => updateTimerMutation.mutate('start')}
+          onClick={() => updateTimerStateMutation.mutate('start')}
         >
           시작
         </button>
@@ -102,9 +93,9 @@ export const TimerDetailPage = () => {
         <button
           type="button"
           disabled={
-            updateTimerMutation.isPending || deleteTimerMutation.isPending
+            updateTimerStateMutation.isPending || deleteTimerMutation.isPending
           }
-          onClick={() => updateTimerMutation.mutate('pause')}
+          onClick={() => updateTimerStateMutation.mutate('pause')}
         >
           일시정지
         </button>
@@ -114,9 +105,9 @@ export const TimerDetailPage = () => {
         <button
           type="button"
           disabled={
-            updateTimerMutation.isPending || deleteTimerMutation.isPending
+            updateTimerStateMutation.isPending || deleteTimerMutation.isPending
           }
-          onClick={() => updateTimerMutation.mutate('start')}
+          onClick={() => updateTimerStateMutation.mutate('start')}
         >
           재시작
         </button>
@@ -125,7 +116,7 @@ export const TimerDetailPage = () => {
       <button
         type="button"
         disabled={
-          updateTimerMutation.isPending || deleteTimerMutation.isPending
+          updateTimerStateMutation.isPending || deleteTimerMutation.isPending
         }
         onClick={() => deleteTimerMutation.mutate()}
       >
