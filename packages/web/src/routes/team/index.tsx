@@ -10,13 +10,7 @@ export const TeamPage = () => {
   const teamQuery = useQuery({
     queryKey: [`/api/team/${teamId}`] as const,
     queryFn: ({ queryKey: [path] }) =>
-      axios.get<{
-        data: {
-          readonly name: string;
-          readonly id: string;
-          // readonly timerList: readonly Timer[];
-        };
-      }>(path),
+      axios.get<{ data: { readonly id: string; readonly name: string } }>(path),
     select: ({ data: { data } }) => data,
   });
 
@@ -82,6 +76,7 @@ export const TeamPage = () => {
 
       <div
         css={css`
+          flex: 1;
           display: flex;
           flex-direction: column;
         `}
@@ -99,7 +94,16 @@ export const TeamPage = () => {
         </div>
 
         {timerListQuery.data.length === 0 ? (
-          <p>타이머 없음</p>
+          <p
+            css={css`
+              flex: 1;
+              display: flex;
+              align-items: center;
+              justify-content: center;
+            `}
+          >
+            타이머 없음
+          </p>
         ) : (
           <ul
             css={css`
@@ -107,9 +111,6 @@ export const TeamPage = () => {
               display: flex;
               flex-wrap: wrap;
               gap: 4rem;
-
-              & > li {
-              }
             `}
           >
             {timerListQuery.data.map((timer) => (
