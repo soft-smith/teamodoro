@@ -36,13 +36,7 @@ export const MainPage = () => {
         gap: 1rem;
       `}
     >
-      <h1
-        css={css`
-          margin: 0;
-        `}
-      >
-        teamodoro.app
-      </h1>
+      <h1>teamodoro.app</h1>
 
       <form
         onSubmit={(e) => {

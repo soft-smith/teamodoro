@@ -76,13 +76,7 @@ export const TimerDetailPage = () => {
         gap: 1rem;
       `}
     >
-      <h1
-        css={css`
-          margin: 0;
-        `}
-      >
-        {timerQuery.data.title}
-      </h1>
+      <h1>{timerQuery.data.title}</h1>
 
       <h2>{timerQuery.data.timeLeft}</h2>
 

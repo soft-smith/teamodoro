@@ -140,7 +140,6 @@ export const TeamPage = () => {
 
                   <h1
                     css={css`
-                      margin: 0;
                       width: 10rem;
                       text-align: center;
                     `}
