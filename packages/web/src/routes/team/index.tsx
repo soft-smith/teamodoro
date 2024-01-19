@@ -119,6 +119,7 @@ export const TeamPage = () => {
                 <Link
                   to={`timer/${timer.id}`}
                   css={css`
+                    height: 100%;
                     text-decoration: none;
                     color: black;
 
@@ -138,7 +139,7 @@ export const TeamPage = () => {
                       text-overflow: ellipsis;
                     `}
                   >
-                    {timer.title}
+                    {timer.title || <br />}
                   </h3>
 
                   <p
