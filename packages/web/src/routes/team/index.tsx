@@ -20,8 +20,9 @@ export const TeamPage = () => {
     queryFn: ({ queryKey: [path] }) =>
       axios.get<{ data: readonly Timer[] }>(path),
     select: ({ data: { data } }) => data,
-    refetchInterval: 100,
   });
+
+  const websocket = utils.websocket.useWebSocket();
 
   if (teamQuery.status === 'error' || timerListQuery.status === 'error') {
     return <div>에러</div>;
@@ -42,6 +43,15 @@ export const TeamPage = () => {
         gap: 2rem;
       `}
     >
+      <button
+        type="button"
+        onClick={() => {
+          websocket.getConnection()?.send('test');
+        }}
+      >
+        test
+      </button>
+
       <header
         css={css`
           width: 100%;
