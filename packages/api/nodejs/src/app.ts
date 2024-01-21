@@ -1,7 +1,7 @@
 import { TypeBoxTypeProvider } from "@fastify/type-provider-typebox";
+import fastifyWebsocket, { SocketStream } from "@fastify/websocket";
 import { Static, Type } from "@sinclair/typebox";
 import fastify from "fastify";
-import fastifyWebsocket from "@fastify/websocket";
 import { PomodoroTimer, Team } from "./types.ts";
 
 const createDtoOfTimer = (timer: PomodoroTimer) => {
@@ -43,24 +43,53 @@ export const createApp = () => {
     return idCounter.toString();
   };
 
+  const connectionTableByTeamId: { [teamId: string]: SocketStream[] } = {};
+
   const app = fastify({ logger: true })
     .withTypeProvider<TypeBoxTypeProvider>()
     .register(fastifyWebsocket)
     .register(async (app) => {
-      app.get("/", { websocket: true }, (conn, req) => {
-        console.log(req.body);
+      app.get<{ Params: { teamId: string } }>(
+        "/:teamId",
+        { websocket: true },
+        (conn, req) => {
+          const { teamId } = req.params;
 
-        conn.socket.on("message", (msg) => {
-          console.log(req.id, msg.toString());
-          conn.socket.send("Hello from server");
-        });
-        conn.socket.on("close", (code) => {
-          console.log(req.id, `Connection closed with code ${code}`);
-        });
-        conn.socket.on("error", (err) => {
-          console.log(req.id, err);
-        });
-      });
+          const team = teamList.find((team) => team.id === teamId);
+          if (!team) {
+            conn.socket.close(4000, "Team not found");
+            return;
+          }
+
+          const conns = connectionTableByTeamId[teamId];
+          if (!conns) {
+            connectionTableByTeamId[teamId] = [conn];
+          } else {
+            conns.push(conn);
+          }
+
+          conn.socket.on("close", (code) => {
+            console.log(req.id, `Connection closed with code ${code}`);
+            const conns = connectionTableByTeamId[teamId];
+            if (!conns) {
+              return;
+            }
+            const index = conns.findIndex((c) => c === conn);
+            if (index === -1) {
+              return;
+            }
+            conns.splice(index, 1);
+            if (conns.length === 0) {
+              delete connectionTableByTeamId[teamId];
+            }
+          });
+
+          conn.socket.on("message", (msg) => {
+            console.log(req.id, msg.toString());
+            conn.socket.send("Hello from server");
+          });
+        }
+      );
     });
 
   // reset server state
