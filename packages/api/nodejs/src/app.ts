@@ -36,12 +36,13 @@ export const CreateTimerRequest = Type.Object({
 });
 
 export const createApp = () => {
-  const teamList: Team[] = [];
   let idCounter = 0;
   const getId = () => {
     idCounter += 1;
     return idCounter.toString();
   };
+
+  const teamList: Team[] = [];
 
   const connectionTableByTeamId: { [teamId: string]: SocketStream[] } = {};
 
@@ -93,12 +94,18 @@ export const createApp = () => {
     });
 
   // reset server state
-  app.post("/reset", async (request) => {
-    teamList.splice(0, teamList.length);
+  app.post("/reset", async () => {
     idCounter = 0;
-    return {
-      data: "OK",
-    };
+
+    teamList.splice(0, teamList.length);
+
+    Object.keys(connectionTableByTeamId).forEach((teamId) => {
+      const conns = connectionTableByTeamId[teamId];
+      conns.forEach((c) => c.socket.close(4000, "Server reset"));
+      delete connectionTableByTeamId[teamId];
+    });
+
+    return { data: "OK" };
   });
 
   app.post<{
