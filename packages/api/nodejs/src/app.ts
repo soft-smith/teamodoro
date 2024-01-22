@@ -99,7 +99,7 @@ export const createApp = () => {
   app.register(cors, {
     origin: new RegExp(
       process.env.WEB_HOST !== "" || process.env.WEB_HOST !== undefined
-        ? `^(http://)|(https://)(.*\\.${process.env.WEB_HOST}|${process.env.WEB_HOST}|localhost|localhost:\\d+)$`
+        ? `^((http://)|(https://))(.*\\.${process.env.WEB_HOST}|${process.env.WEB_HOST}|localhost|localhost:\\d+)$`
         : ".*"
     ),
   });
@@ -211,7 +211,7 @@ export const createApp = () => {
         throw new Error("Team not found");
       }
       const timer = team.timerList.find(
-        (timer) => timer.id === request.params["teamId"]
+        (timer) => timer.id === request.params["timerId"]
       );
       if (!timer) {
         throw new Error("Timer not found");
