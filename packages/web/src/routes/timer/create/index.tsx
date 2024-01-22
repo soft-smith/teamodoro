@@ -12,7 +12,7 @@ export const CreateTimerPage = () => {
     mutationFn: (params: {
       readonly title: string;
       readonly duration: string;
-    }) => axios.post(`/api/team/${teamId}/timer/create`, params),
+    }) => axios.post(`/team/${teamId}/timer/create`, params),
     onSuccess: () => {
       navigate(`/team/${teamId}`);
     },

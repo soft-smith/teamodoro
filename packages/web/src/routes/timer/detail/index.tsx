@@ -13,7 +13,7 @@ export const TimerDetailPage = () => {
   const updateTimerStateMutation = useMutation({
     mutationFn: (state: 'start' | 'pause') =>
       axios.post<{ data: Timer }>(
-        `/api/team/${teamId}/timer/${timerId}/${state}`,
+        `/team/${teamId}/timer/${timerId}/${state}`,
       ),
     onSuccess: ({ data: { data } }) => {
       switch (data.status) {
@@ -33,7 +33,7 @@ export const TimerDetailPage = () => {
   });
 
   const deleteTimerMutation = useMutation({
-    mutationFn: () => axios.post(`/api/team/${teamId}/timer/${timerId}/delete`),
+    mutationFn: () => axios.post(`/team/${teamId}/timer/${timerId}/delete`),
     onSuccess: () => {
       navigate(`/team/${teamId}`, { replace: true });
       alert('타이머가 삭제되었습니다.');
@@ -45,7 +45,7 @@ export const TimerDetailPage = () => {
 
   const timerQuery = useQuery({
     enabled: deleteTimerMutation.isIdle,
-    queryKey: [`/api/team/${teamId}/timer/${timerId}`] as const,
+    queryKey: [`/team/${teamId}/timer/${timerId}`] as const,
     queryFn: ({ queryKey: [path] }) => axios.get<{ data: Timer }>(path),
     select: ({ data: { data } }) => data,
     refetchInterval: 100,

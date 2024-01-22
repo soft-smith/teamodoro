@@ -13,7 +13,7 @@ export const MainPage = () => {
           readonly id: string;
           readonly name: string;
         };
-      }>('/api/team/create', { name }),
+      }>('/team/create', { name }),
     onSuccess: ({ data: { data } }) => {
       navigate(`/team/${data.id}`);
     },

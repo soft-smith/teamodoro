@@ -9,14 +9,14 @@ export const TeamPage = () => {
   const { teamId } = useParams();
 
   const teamQuery = useQuery({
-    queryKey: [`/api/team/${teamId}`] as const,
+    queryKey: [`/team/${teamId}`] as const,
     queryFn: ({ queryKey: [path] }) =>
       axios.get<{ data: { readonly id: string; readonly name: string } }>(path),
     select: ({ data: { data } }) => data,
   });
 
   const timerListQuery = useQuery({
-    queryKey: [`/api/team/${teamId}/timer/list`] as const,
+    queryKey: [`/team/${teamId}/timer/list`] as const,
     queryFn: ({ queryKey: [path] }) =>
       axios.get<{ data: readonly Timer[] }>(path),
     select: ({ data: { data } }) => data,
