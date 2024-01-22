@@ -9,12 +9,14 @@
   },
   "devDependencies": {
     "@types/node": "^20.11.5",
+    "@types/ws": "^8.5.10",
     "tsx": "^4.7.0",
     "typescript": "^5.3.3"
   },
   "dependencies": {
     "@fastify/cors": "^8.5.0",
     "@fastify/type-provider-typebox": "^4.0.0",
+    "@fastify/websocket": "^8.3.1",
     "@sinclair/typebox": "^0.32.9",
     "fastify": "^4.25.2"
   }

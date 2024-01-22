@@ -2,15 +2,9 @@ import fastify from "fastify";
 import cors from "@fastify/cors";
 import { Static, Type } from "@sinclair/typebox";
 import { TypeBoxTypeProvider } from "@fastify/type-provider-typebox";
-
-interface PomodoroTimer {
-  id: string;
-  title: string;
-  duration: number;
-  timeLeft: number;
-  timerId: NodeJS.Timeout | null;
-  status: "RUNNING" | "PAUSED" | "STOPPED";
-}
+import fastifyWebsocket, { SocketStream } from "@fastify/websocket";
+import { Static, Type } from "@sinclair/typebox";
+import { PomodoroTimer, Team } from "./types.ts";
 
 const createDtoOfTimer = (timer: PomodoroTimer) => {
   return {
@@ -34,37 +28,74 @@ export const GetPomodoroTimerRequest = Type.Object({
   ]),
 });
 
-export type GetPomodoroTimerRequestType = Static<
-  typeof GetPomodoroTimerRequest
->;
-
-interface Team {
-  id: string;
-  name: string;
-  timerList: PomodoroTimer[];
-}
-
 export const CreateTeamRequest = Type.Object({
   name: Type.String(),
 });
-export type CreateTeamRequestType = Static<typeof CreateTeamRequest>;
 
 export const CreateTimerRequest = Type.Object({
   title: Type.String(),
   duration: Type.Number(),
 });
 
-export type CreateTimerRequestType = Static<typeof CreateTimerRequest>;
-
 export const createApp = () => {
-  const teamList: Team[] = [];
   let idCounter = 0;
   const getId = () => {
     idCounter += 1;
     return idCounter.toString();
   };
 
-  const app = fastify({ logger: true }).withTypeProvider<TypeBoxTypeProvider>();
+  const teamList: Team[] = [];
+
+  const connectionTableByTeamId: { [teamId: string]: SocketStream[] } = {};
+
+  const app = fastify({ logger: true })
+    .withTypeProvider<TypeBoxTypeProvider>()
+    .register(fastifyWebsocket)
+    .register((app) =>
+      // handle websocket connection
+      app.get<{ Params: { teamId: string } }>(
+        "/:teamId",
+        { websocket: true },
+        (conn, req) => {
+          const { teamId } = req.params;
+
+          const team = teamList.find((team) => team.id === teamId);
+          if (!team) {
+            conn.socket.close(4000, "Team not found");
+            return;
+          }
+
+          const conns = connectionTableByTeamId[teamId];
+          if (!conns) {
+            connectionTableByTeamId[teamId] = [conn];
+          } else {
+            conns.push(conn);
+          }
+
+          conn.socket.on("close", (code) => {
+            console.log(req.id, `Connection closed with code ${code}`);
+            const conns = connectionTableByTeamId[teamId];
+            if (!conns) {
+              return;
+            }
+            const index = conns.findIndex((c) => c === conn);
+            if (index === -1) {
+              return;
+            }
+            conns.splice(index, 1);
+            if (conns.length === 0) {
+              delete connectionTableByTeamId[teamId];
+            }
+          });
+
+          conn.socket.on("message", (msg) => {
+            console.log(req.id, msg.toString());
+            conn.socket.send("Hello from server");
+          });
+        }
+      )
+    );
+
   app.register(cors, {
     origin: new RegExp(
       process.env.WEB_HOST !== "" || process.env.WEB_HOST !== undefined
@@ -73,200 +104,183 @@ export const createApp = () => {
     ),
   });
 
-  app.get("/", async () => {
-    return { hello: "world" };
-  });
 
   // reset server state
   app.post("/_test/reset", async (request) => {
     teamList.splice(0, teamList.length);
     idCounter = 0;
-    return {
-      data: "OK",
-    };
+
+    teamList.splice(0, teamList.length);
+
+    Object.keys(connectionTableByTeamId).forEach((teamId) => {
+      const conns = connectionTableByTeamId[teamId];
+      conns.forEach((c) => c.socket.close(4000, "Server reset"));
+      delete connectionTableByTeamId[teamId];
+    });
+
+    return { data: "OK" };
   });
 
-  app.post<{
-    Body: CreateTeamRequestType;
-  }>(
+  // create team
+  app.post<{ Body: Static<typeof CreateTeamRequest> }>(
     "/team/create",
-    {
-      schema: {
-        body: CreateTeamRequest,
-      },
-    },
-    async (request) => {
+    { schema: { body: CreateTeamRequest } },
+    (request) => {
       const team: Team = {
-        ...request.body,
         id: getId(),
+        name: request.body.name,
         timerList: [],
       };
       teamList.push(team);
-      return {
-        data: { ...team, timerList: undefined },
-      };
+      return { data: { id: team.id, name: team.name } };
     }
   );
 
-  app.get<{
-    Params: {
-      teamId: string;
-    };
-  }>("/team/:teamId", async (request) => {
+  // query team
+  app.get<{ Params: { teamId: string } }>("/team/:teamId", (request) => {
     const team = teamList.find((team) => team.id === request.params["teamId"]);
     if (!team) {
       throw new Error("Team not found");
     }
-    return {
-      data: { ...team, timerList: undefined },
-    };
+    return { data: { id: team.id, name: team.name } };
   });
 
-  app.get<{
-    Params: {
-      teamId: string;
-    };
-  }>("/team/:teamId/timer/list", async (request) => {
-    const team = teamList.find((team) => team.id === request.params["teamId"]);
-    if (!team) {
-      throw new Error("Team not found");
+  // query timer list of team
+  app.get<{ Params: { teamId: string } }>(
+    "/team/:teamId/timer/list",
+    (request) => {
+      const team = teamList.find(
+        (team) => team.id === request.params["teamId"]
+      );
+      if (!team) {
+        throw new Error("Team not found");
+      }
+      return { data: team.timerList.map(createDtoOfTimer) };
     }
-    return {
-      data: team.timerList.map(createDtoOfTimer),
-    };
-  });
+  );
 
+  // create timer
   app.post<{
-    Params: {
-      teamId: string;
-    };
-    Body: CreateTimerRequestType;
-  }>("/team/:teamId/timer/create", async (request) => {
+    Params: { teamId: string };
+    Body: Static<typeof CreateTimerRequest>;
+  }>("/team/:teamId/timer/create", (request) => {
     const team = teamList.find((team) => team.id === request.params["teamId"]);
     if (!team) {
       throw new Error("Team not found");
     }
     const timer: PomodoroTimer = {
-      ...request.body,
+      duration: request.body.duration,
+      title: request.body.title,
       id: getId(),
       status: "PAUSED",
       timeLeft: request.body.duration,
       timerId: null,
     };
     team.timerList.push(timer);
-    return {
-      data: createDtoOfTimer(timer),
-    };
+    return { data: createDtoOfTimer(timer) };
   });
 
-  app.get<{
-    Params: {
-      teamId: string;
-      timerId: string;
-    };
-  }>("/team/:teamId/timer/:timerId", async (request) => {
-    const team = teamList.find((team) => team.id === request.params["teamId"]);
-    if (!team) {
-      throw new Error("Team not found");
+  // query timer of team
+  app.get<{ Params: { teamId: string; timerId: string } }>(
+    "/team/:teamId/timer/:timerId",
+    (request) => {
+      const team = teamList.find(
+        (team) => team.id === request.params["teamId"]
+      );
+      if (!team) {
+        throw new Error("Team not found");
+      }
+      const timer = team.timerList.find(
+        (timer) => timer.id === request.params["timerId"]
+      );
+      if (!timer) {
+        throw new Error("Timer not found");
+      }
+      return { data: createDtoOfTimer(timer) };
     }
-    const timer = team.timerList.find(
-      (timer) => timer.id === request.params["timerId"]
-    );
-    if (!timer) {
-      throw new Error("Timer not found");
-    }
-    return {
-      data: createDtoOfTimer(timer),
-    };
-  });
+  );
 
   // pause timer
-  app.post<{
-    Params: {
-      teamId: string;
-      timerId: string;
-    };
-  }>("/team/:teamId/timer/:timerId/pause", async (request) => {
-    const team = teamList.find((team) => team.id === request.params["teamId"]);
-    if (!team) {
-      throw new Error("Team not found");
+  app.post<{ Params: { teamId: string; timerId: string } }>(
+    "/team/:teamId/timer/:timerId/pause",
+    (request) => {
+      const team = teamList.find(
+        (team) => team.id === request.params["teamId"]
+      );
+      if (!team) {
+        throw new Error("Team not found");
+      }
+      const timer = team.timerList.find(
+        (timer) => timer.id === request.params["teamId"]
+      );
+      if (!timer) {
+        throw new Error("Timer not found");
+      }
+      if (timer.timerId) {
+        clearInterval(timer.timerId);
+        timer.timerId = null;
+      }
+      timer.status = "PAUSED";
+      return { data: createDtoOfTimer(timer) };
     }
-    const timer = team.timerList.find(
-      (timer) => timer.id === request.params["timerId"]
-    );
-    if (!timer) {
-      throw new Error("Timer not found");
-    }
-    if (timer.timerId) {
-      clearInterval(timer.timerId);
-      timer.timerId = null;
-    }
-    timer.status = "PAUSED";
-    return {
-      data: createDtoOfTimer(timer),
-    };
-  });
+  );
 
   // resume or start timer
-  app.post<{
-    Params: {
-      teamId: string;
-      timerId: string;
-    };
-  }>("/team/:teamId/timer/:timerId/start", async (request) => {
-    const team = teamList.find((team) => team.id === request.params["teamId"]);
-    if (!team) {
-      throw new Error("Team not found");
-    }
-    const timer = team.timerList.find(
-      (timer) => timer.id === request.params["timerId"]
-    );
-    if (!timer) {
-      throw new Error("Timer not found");
-    }
-    if (timer.status === "STOPPED") {
-      timer.timeLeft = timer.duration;
-    }
+  app.post<{ Params: { teamId: string; timerId: string } }>(
+    "/team/:teamId/timer/:timerId/start",
+    (request) => {
+      const team = teamList.find(
+        (team) => team.id === request.params["teamId"]
+      );
+      if (!team) {
+        throw new Error("Team not found");
+      }
+      const timer = team.timerList.find(
+        (timer) => timer.id === request.params["timerId"]
+      );
+      if (!timer) {
+        throw new Error("Timer not found");
+      }
+      if (timer.status === "STOPPED") {
+        timer.timeLeft = timer.duration;
+      }
 
-    if (timer.timerId === null) {
-      timer.timerId = setInterval(() => {
-        timer.timeLeft -= 1;
-        if (timer.timeLeft === 0) {
-          timer.status = "STOPPED";
-          clearInterval(timer.timerId!);
-          timer.timerId = null;
-        }
-      }, 1000);
-    }
+      if (timer.timerId === null) {
+        timer.timerId = setInterval(() => {
+          timer.timeLeft -= 1;
+          if (timer.timeLeft === 0) {
+            timer.status = "STOPPED";
+            clearInterval(timer.timerId!);
+            timer.timerId = null;
+          }
+        }, 1000);
+      }
 
-    timer.status = "RUNNING";
-    return {
-      data: createDtoOfTimer(timer),
-    };
-  });
+      timer.status = "RUNNING";
+      return { data: createDtoOfTimer(timer) };
+    }
+  );
 
   // delete timer
-  app.post<{
-    Params: {
-      teamId: string;
-      timerId: string;
-    };
-  }>("/team/:teamId/timer/:timerId/delete", async (request) => {
-    const team = teamList.find((team) => team.id === request.params["teamId"]);
-    if (!team) {
-      throw new Error("Team not found");
+  app.post<{ Params: { teamId: string; timerId: string } }>(
+    "/team/:teamId/timer/:timerId/delete",
+    (request) => {
+      const team = teamList.find(
+        (team) => team.id === request.params["teamId"]
+      );
+      if (!team) {
+        throw new Error("Team not found");
+      }
+      const timerIndex = team.timerList.findIndex(
+        (timer) => timer.id === request.params["timerId"]
+      );
+      if (timerIndex === -1) {
+        throw new Error("Timer not found");
+      }
+      team.timerList.splice(timerIndex, 1);
+      return { data: "OK" };
     }
-    const timerIndex = team.timerList.findIndex(
-      (timer) => timer.id === request.params["timerId"]
-    );
-    if (timerIndex === -1) {
-      throw new Error("Timer not found");
-    }
-    team.timerList.splice(timerIndex, 1);
-    return {
-      data: "OK",
-    };
-  });
+  );
 
   return app;
 };

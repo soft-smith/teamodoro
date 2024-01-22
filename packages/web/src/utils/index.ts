@@ -1,3 +1,5 @@
+import websocket from './websocket';
+
 export default {
   time: {
     pad(t: number) {
@@ -14,4 +16,6 @@ export default {
       return formattedSegments.map((s) => this.pad(s)).join(':');
     },
   },
+
+  websocket,
 } as const;
