@@ -1,6 +1,6 @@
 import { css } from '@emotion/react';
 import { useMutation } from '@tanstack/react-query';
-import axios from 'axios';
+import axios from '@/api/client';
 import { useNavigate, useParams } from 'react-router-dom';
 
 export const CreateTimerPage = () => {
@@ -12,7 +12,7 @@ export const CreateTimerPage = () => {
     mutationFn: (params: {
       readonly title: string;
       readonly duration: string;
-    }) => axios.post(`/api/team/${teamId}/timer/create`, params),
+    }) => axios.post(`/team/${teamId}/timer/create`, params),
     onSuccess: () => {
       navigate(`/team/${teamId}`);
     },
