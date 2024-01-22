@@ -2,7 +2,7 @@ import { Timer } from '@/api/types';
 import utils from '@/utils';
 import { css } from '@emotion/react';
 import { useQuery } from '@tanstack/react-query';
-import axios from 'axios';
+import axios from '@/api/client';
 import { Link, useParams } from 'react-router-dom';
 
 export const TeamPage = () => {

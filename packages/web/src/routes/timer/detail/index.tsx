@@ -2,7 +2,7 @@ import { Timer } from '@/api/types';
 import utils from '@/utils';
 import { css } from '@emotion/react';
 import { useMutation, useQuery } from '@tanstack/react-query';
-import axios from 'axios';
+import axios from '@/api/client';
 import { useNavigate, useParams } from 'react-router-dom';
 
 export const TimerDetailPage = () => {

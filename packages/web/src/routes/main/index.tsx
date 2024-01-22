@@ -1,6 +1,6 @@
 import { css } from '@emotion/react';
 import { useMutation } from '@tanstack/react-query';
-import axios from 'axios';
+import axios from '@/api/client';
 import { useNavigate } from 'react-router-dom';
 
 export const MainPage = () => {
