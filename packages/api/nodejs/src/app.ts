@@ -1,4 +1,5 @@
 import fastify from "fastify";
+import cors from "@fastify/cors";
 import { Static, Type } from "@sinclair/typebox";
 import { TypeBoxTypeProvider } from "@fastify/type-provider-typebox";
 
@@ -64,6 +65,13 @@ export const createApp = () => {
   };
 
   const app = fastify({ logger: true }).withTypeProvider<TypeBoxTypeProvider>();
+  app.register(cors, {
+    origin: new RegExp(
+      process.env.API_HOST !== ""
+        ? `^(.*\\.${process.env.API_HOST})|${process.env.API_HOST}$`
+        : ".*"
+    ),
+  });
 
   app.get("/", async () => {
     return { hello: "world" };
