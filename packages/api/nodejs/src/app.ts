@@ -68,7 +68,7 @@ export const createApp = () => {
   app.register(cors, {
     origin: new RegExp(
       process.env.WEB_HOST !== "" || process.env.WEB_HOST !== undefined
-        ? `^(.*\\.${process.env.WEB_HOST})|${process.env.WEB_HOST}$`
+        ? `^(http://)|(https://)(.*\\.${process.env.WEB_HOST}|${process.env.WEB_HOST}|localhost|localhost:\\d+)$`
         : ".*"
     ),
   });
