@@ -67,8 +67,8 @@ export const createApp = () => {
   const app = fastify({ logger: true }).withTypeProvider<TypeBoxTypeProvider>();
   app.register(cors, {
     origin: new RegExp(
-      process.env.API_HOST !== ""
-        ? `^(.*\\.${process.env.API_HOST})|${process.env.API_HOST}$`
+      process.env.WEB_HOST !== "" || process.env.WEB_HOST !== undefined
+        ? `^(.*\\.${process.env.WEB_HOST})|${process.env.WEB_HOST}$`
         : ".*"
     ),
   });
