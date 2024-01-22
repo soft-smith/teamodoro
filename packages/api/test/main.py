@@ -3,8 +3,13 @@ import json
 
 url = "http://localhost:3000"
 
+
+def _reset():
+    requests.post(url + "/_test/reset")
+
+
 def test_create_team_and_timer():
-    requests.post(url + "/reset")
+    _reset()
 
     team = {
         "name": "test team",
@@ -39,7 +44,7 @@ test_create_team_and_timer()
 print("PASS test_create_team_and_timer")
 
 def test_create_team_id_counter():
-    requests.post(url + "/reset")
+    _reset()
 
     team = {
         "name": "test team",
@@ -62,7 +67,7 @@ print("PASS test_create_team_id_counter")
 
 
 def test_create_team_and_timer_id_counter():
-    requests.post(url + "/reset")
+    _reset()
 
     team = {
         "name": "test team",
@@ -95,7 +100,7 @@ print("PASS test_create_team_and_timer_id_counter")
 
 
 def test_create_team_and_timer_and_start_timer():
-    requests.post(url + "/reset")
+    _reset()
 
     team = {
         "name": "test team",
@@ -128,7 +133,7 @@ print("PASS test_create_team_and_timer_and_start_timer")
 
 
 def test_create_team_and_timer_and_start_timer_and_pause_timer():
-    requests.post(url + "/reset")
+    _reset()
 
     team = {
         "name": "test team",
@@ -164,7 +169,7 @@ print("PASS test_create_team_and_timer_and_start_timer_and_pause_timer")
 
 
 def test_create_team_and_timer_and_start_timer_and_pause_timer_and_resume_timer():
-    requests.post(url + "/reset")
+    _reset()
 
     team = {
         "name": "test team",
@@ -207,7 +212,7 @@ print("PASS test_create_team_and_timer_and_start_timer_and_pause_timer_and_resum
 
 
 def test_create_team_and_timer_and_start_timer_and_pause_timer_and_check_time_left():
-    requests.post(url + "/reset")
+    _reset()
 
     team = {
         "name": "test team",

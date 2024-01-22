@@ -70,7 +70,7 @@ export const createApp = () => {
   });
 
   // reset server state
-  app.post("/reset", async (request) => {
+  app.post("/_test/reset", async (request) => {
     teamList.splice(0, teamList.length);
     idCounter = 0;
     return {
