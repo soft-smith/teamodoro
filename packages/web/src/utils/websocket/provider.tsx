@@ -97,7 +97,7 @@ export const WebSocketProvider = () => {
 
   const connect = useCallback(
     (teamId: string) => {
-      const newConn = new WebSocket(`ws://localhost:3000/${teamId}`);
+      const newConn = new WebSocket(`${import.meta.env.VITE_WS_URL}/${teamId}`);
 
       newConn.onmessage = ({ data }) => {
         const msg = JSON.parse(data as string) as WebSocketMessage;
