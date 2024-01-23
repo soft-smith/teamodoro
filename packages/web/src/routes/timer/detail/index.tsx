@@ -12,9 +12,7 @@ export const TimerDetailPage = () => {
 
   const updateTimerStateMutation = useMutation({
     mutationFn: (state: 'start' | 'pause') =>
-      axios.post<{ data: Timer }>(
-        `/team/${teamId}/timer/${timerId}/${state}`,
-      ),
+      axios.post<{ data: Timer }>(`/team/${teamId}/timer/${timerId}/${state}`),
     onSuccess: ({ data: { data } }) => {
       switch (data.status) {
         case 'PAUSED':
@@ -48,7 +46,6 @@ export const TimerDetailPage = () => {
     queryKey: [`/team/${teamId}/timer/${timerId}`] as const,
     queryFn: ({ queryKey: [path] }) => axios.get<{ data: Timer }>(path),
     select: ({ data: { data } }) => data,
-    refetchInterval: 100,
   });
 
   if (timerQuery.status === 'error') {

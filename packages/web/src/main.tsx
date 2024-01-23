@@ -11,21 +11,13 @@ import { CreateTimerPage, TeamPage, TimerDetailPage } from './routes';
 import { MainPage } from './routes/main';
 import Utils from './utils';
 
-const queryClient = new QueryClient();
-
 ReactDOM.createRoot(document.getElementById('root')!).render(
   <React.StrictMode>
-    <QueryClientProvider client={queryClient}>
+    <QueryClientProvider client={new QueryClient()}>
       <RouterProvider
         router={createBrowserRouter([
           {
-            element: (
-              <Utils.websocket.provider
-                onMessage={({ data }) => {
-                  console.log(data);
-                }}
-              />
-            ),
+            element: <Utils.websocket.provider />,
             children: [
               { path: '/', element: <MainPage /> },
               {

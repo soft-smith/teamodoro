@@ -6,6 +6,16 @@ import { Static, Type } from "@sinclair/typebox";
 import { PomodoroTimer, Team } from "./types.ts";
 import { createMockClockWithSystemClock } from "./timer.ts";
 
+interface WebSocketMessage<T = unknown> {
+  readonly type:
+    | "TIMER_CREATED"
+    | "TIMER_DELETED"
+    | "TIMER_TICK"
+    | "TIMER_PAUSED"
+    | "TIMER_STARTED";
+  readonly data: T;
+}
+
 const createDtoOfTimer = (timer: PomodoroTimer) => {
   return {
     id: timer.id,
@@ -54,6 +64,16 @@ export const createApp = () => {
 
   const connectionTableByTeamId: { [teamId: string]: SocketStream[] } = {};
 
+  const broadcast = <T>(teamId: string, msg: WebSocketMessage<T>) => {
+    const conns = connectionTableByTeamId[teamId];
+    if (!conns) {
+      return;
+    }
+    conns.forEach((conn) => {
+      conn.socket.send(JSON.stringify(msg));
+    });
+  };
+
   const app = fastify({ logger: true })
     .withTypeProvider<TypeBoxTypeProvider>()
     .register(fastifyWebsocket)
@@ -94,9 +114,10 @@ export const createApp = () => {
             }
           });
 
-          conn.socket.on("message", (msg) => {
-            console.log(req.id, msg.toString());
-            conn.socket.send("Hello from server");
+          conn.socket.on("message", (rawMsg) => {
+            // const msg = JSON.parse(rawMsg.toString()) as Message;
+            // console.log(req.id, msg.toString());
+            // conn.socket.send("Hello from server");
           });
         }
       )
@@ -109,7 +130,6 @@ export const createApp = () => {
         : ".*"
     ),
   });
-
 
   // reset server state
   app.post("/_test/reset", async (request) => {
@@ -204,6 +224,10 @@ export const createApp = () => {
       timerId: null,
     };
     team.timerList.push(timer);
+    broadcast(team.id, {
+      type: "TIMER_CREATED",
+      data: createDtoOfTimer(timer),
+    });
     return { data: createDtoOfTimer(timer) };
   });
 
@@ -248,6 +272,10 @@ export const createApp = () => {
         timer.timerId = null;
       }
       timer.status = "PAUSED";
+      broadcast(team.id, {
+        type: "TIMER_PAUSED",
+        data: createDtoOfTimer(timer),
+      });
       return { data: createDtoOfTimer(timer) };
     }
   );
@@ -275,6 +303,10 @@ export const createApp = () => {
       if (timer.timerId === null) {
         timer.timerId = clock.setInterval(() => {
           timer.timeLeft -= 1;
+          broadcast(team.id, {
+            type: "TIMER_TICK",
+            data: createDtoOfTimer(timer),
+          });
           if (timer.timeLeft === 0) {
             timer.status = "STOPPED";
             clock.clearInterval(timer.timerId!);
@@ -284,6 +316,12 @@ export const createApp = () => {
       }
 
       timer.status = "RUNNING";
+
+      broadcast(team.id, {
+        type: "TIMER_STARTED",
+        data: createDtoOfTimer(timer),
+      });
+
       return { data: createDtoOfTimer(timer) };
     }
   );
@@ -305,6 +343,12 @@ export const createApp = () => {
         throw new Error("Timer not found");
       }
       team.timerList.splice(timerIndex, 1);
+
+      broadcast(team.id, {
+        type: "TIMER_DELETED",
+        data: request.params["timerId"],
+      });
+
       return { data: "OK" };
     }
   );
