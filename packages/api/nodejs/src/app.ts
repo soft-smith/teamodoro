@@ -5,8 +5,13 @@ import fastifyWebsocket, { SocketStream } from "@fastify/websocket";
 import { Static, Type } from "@sinclair/typebox";
 import { PomodoroTimer, Team } from "./types.ts";
 
-interface Message<T> {
-  readonly type: string;
+interface WebSocketMessage<T = unknown> {
+  readonly type:
+    | "TIMER_CREATED"
+    | "TIMER_DELETED"
+    | "TIMER_TICK"
+    | "TIMER_PAUSED"
+    | "TIMER_STARTED";
   readonly data: T;
 }
 
@@ -52,7 +57,7 @@ export const createApp = () => {
 
   const connectionTableByTeamId: { [teamId: string]: SocketStream[] } = {};
 
-  const broadcast = <T>(teamId: string, msg: Message<T>) => {
+  const broadcast = <T>(teamId: string, msg: WebSocketMessage<T>) => {
     const conns = connectionTableByTeamId[teamId];
     if (!conns) {
       return;
