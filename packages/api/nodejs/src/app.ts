@@ -4,6 +4,7 @@ import { TypeBoxTypeProvider } from "@fastify/type-provider-typebox";
 import fastifyWebsocket, { SocketStream } from "@fastify/websocket";
 import { Static, Type } from "@sinclair/typebox";
 import { PomodoroTimer, Team } from "./types.ts";
+import { createMockClockWithSystemClock } from "./timer.ts";
 
 interface WebSocketMessage<T = unknown> {
   readonly type:
@@ -24,6 +25,10 @@ const createDtoOfTimer = (timer: PomodoroTimer) => {
     status: timer.status,
   };
 };
+
+export const _TestClockTickRequest = Type.Object({
+  ms: Type.Number(),
+});
 
 export const GetPomodoroTimerRequest = Type.Object({
   id: Type.String(),
@@ -52,6 +57,8 @@ export const createApp = () => {
     idCounter += 1;
     return idCounter.toString();
   };
+
+  const clock = createMockClockWithSystemClock({ paused: false });
 
   const teamList: Team[] = [];
 
@@ -137,6 +144,27 @@ export const createApp = () => {
       delete connectionTableByTeamId[teamId];
     });
 
+    clock.clearAll();
+
+    return { data: "OK" };
+  });
+
+  app.post("/_test/clock/pause", async (request) => {
+    clock.pause();
+    return { data: "OK" };
+  });
+
+  app.post("/_test/clock/resume", async (request) => {
+    clock.resume();
+    return { data: "OK" };
+  });
+
+  app.post<{
+    Body: Static<typeof _TestClockTickRequest>;
+  }>("/_test/clock/tick", {
+    schema: { body: _TestClockTickRequest },
+  }, async (request) => {
+    clock.tick(request.body.ms);
     return { data: "OK" };
   });
 
@@ -273,7 +301,7 @@ export const createApp = () => {
       }
 
       if (timer.timerId === null) {
-        timer.timerId = setInterval(() => {
+        timer.timerId = clock.setInterval(() => {
           timer.timeLeft -= 1;
           broadcast(team.id, {
             type: "TIMER_TICK",
@@ -281,7 +309,7 @@ export const createApp = () => {
           });
           if (timer.timeLeft === 0) {
             timer.status = "STOPPED";
-            clearInterval(timer.timerId!);
+            clock.clearInterval(timer.timerId!);
             timer.timerId = null;
           }
         }, 1000);

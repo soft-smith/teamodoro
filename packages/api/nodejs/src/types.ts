@@ -3,7 +3,7 @@ export interface PomodoroTimer {
   title: string;
   duration: number;
   timeLeft: number;
-  timerId: NodeJS.Timeout | null;
+  timerId: number | null;
   status: "RUNNING" | "PAUSED" | "STOPPED";
 }
 
