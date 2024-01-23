@@ -7,10 +7,12 @@ type ClockCallback = (lastCallTimeMs: number, callTimeMs: number) => void;
 
 interface MockClock extends Clock {
   tick: (ms: number) => void;
+  clearAll: () => void;
 }
 
 interface MockClockCallbackState {
-  lastCallTimeMs: number;
+  lastCalledTimeMs: number;
+  lastCallbackTimingMs: number;
   interval: number;
   callback: ClockCallback;
 }
@@ -26,7 +28,8 @@ export const createMockClock = (): MockClock => {
       const id = intervalId;
       intervalId += 1;
       callbackList[id] = {
-        lastCallTimeMs: currentTimeMs,
+        lastCalledTimeMs: currentTimeMs,
+        lastCallbackTimingMs: currentTimeMs,
         interval: ms,
         callback,
       };
@@ -39,48 +42,54 @@ export const createMockClock = (): MockClock => {
       currentTimeMs += ms;
       Object.keys(callbackList).forEach((id) => {
         const callbackState = callbackList[id];
-        const { lastCallTimeMs, interval, callback } = callbackState;
+        const { lastCalledTimeMs, interval, callback } = callbackState;
         const callTimeMs = currentTimeMs;
-        if (callTimeMs - lastCallTimeMs >= interval) {
-          callbackState.lastCallTimeMs = callTimeMs;
-          callback(lastCallTimeMs, callTimeMs);
+        while (callTimeMs - callbackState.lastCallbackTimingMs >= interval) {
+          callbackState.lastCallbackTimingMs += interval;
+          callback(lastCalledTimeMs, callTimeMs);
         }
+      });
+    },
+    clearAll: () => {
+      Object.keys(callbackList).forEach((id) => {
+        delete callbackList[id];
       });
     },
   };
 };
 
-interface SystemClockCallbackState {
-  lastCallTimeMs: number;
-  interval: number;
-  systemIntervalId: NodeJS.Timeout;
+interface MockClockWithSystemClock extends MockClock {
+  pause: () => void;
+  resume: () => void;
 }
 
 // Use internal clock while providing lastCallTimeMs and callTimeMs
-export const createSystemClock = (): Clock => {
-  const callbackList: { [id: string]: SystemClockCallbackState } = {};
-  let intervalId = 0;
-  return {
-    setInterval: (callback, ms) => {
-      const id = intervalId;
-      intervalId += 1;
-      callbackList[id] = {
-        lastCallTimeMs: 0,
-        interval: ms,
-        systemIntervalId: setInterval(() => {
-          const callbackState = callbackList[id];
-          const { lastCallTimeMs } = callbackState;
-          const callTimeMs = Date.now();
-          callbackState.lastCallTimeMs = callTimeMs;
-          callback(lastCallTimeMs, callTimeMs);
-        }, ms),
-      };
+export const createMockClockWithSystemClock = ({
+  paused,
+}: {
+  paused: boolean;
+}): MockClockWithSystemClock => {
+  // Repurpose MockClock using system interval
+  const mockClock = createMockClock() as MockClock;
+  let lastTickMs = Date.now();
+  const tickClock = () => {
+    const nowMs = Date.now();
+    const deltaMs = nowMs - lastTickMs;
+    lastTickMs = nowMs;
+    mockClock.tick(deltaMs);
+  };
+  let interval = paused ? null : setInterval(tickClock, 10);
 
-      return id;
+  return {
+    ...mockClock,
+    pause: () => {
+      if (!interval) {
+        return;
+      }
+      clearInterval(interval);
     },
-    clearInterval: (id) => {
-      clearInterval(callbackList[id].systemIntervalId);
-      delete callbackList[id];
+    resume: () => {
+      interval = setInterval(tickClock, 10);
     },
   };
 };
