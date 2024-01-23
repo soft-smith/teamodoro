@@ -48,7 +48,6 @@ export const TimerDetailPage = () => {
     queryKey: [`/team/${teamId}/timer/${timerId}`] as const,
     queryFn: ({ queryKey: [path] }) => axios.get<{ data: Timer }>(path),
     select: ({ data: { data } }) => data,
-    refetchInterval: 100,
   });
 
   if (timerQuery.status === 'error') {
